@@ -32,8 +32,14 @@ namespace Core2AadAuth
                 opts.Filters.Add(typeof(AdalTokenAcquisitionExceptionFilter));
             });
 
-            services.AddCookieAuthentication();
-            services.AddOpenIdConnectAuthentication(opts =>
+            services.AddAuthentication(auth =>
+            {
+                auth.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                auth.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+                auth.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            })
+            .AddCookie()
+            .AddOpenIdConnect(opts =>
             {
                 Configuration.GetSection("Authentication").Bind(opts);
 
@@ -41,30 +47,24 @@ namespace Core2AadAuth
                 {
                     OnAuthorizationCodeReceived = async ctx =>
                     {
-                        var request = ctx.HttpContext.Request;
-                        var currentUri = UriHelper.BuildAbsolute(request.Scheme, request.Host, request.PathBase, request.Path);
+                        HttpRequest request = ctx.HttpContext.Request;
+                        string currentUri = UriHelper.BuildAbsolute(request.Scheme, request.Host, request.PathBase, request.Path);
                         var credential = new ClientCredential(ctx.Options.ClientId, ctx.Options.ClientSecret);
 
-                        var distributedCache = ctx.HttpContext.RequestServices.GetRequiredService<IDistributedCache>();
-                        string userId = ctx.Ticket.Principal.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
+                        IDistributedCache distributedCache = ctx.HttpContext.RequestServices.GetRequiredService<IDistributedCache>();
+                        
+                        string userId = ctx.Principal.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
 
                         var cache = new AdalDistributedTokenCache(distributedCache, userId);
 
                         var authContext = new AuthenticationContext(ctx.Options.Authority, cache);
 
-                        var result = await authContext.AcquireTokenByAuthorizationCodeAsync(
+                        AuthenticationResult result = await authContext.AcquireTokenByAuthorizationCodeAsync(
                             ctx.ProtocolMessage.Code, new Uri(currentUri), credential, ctx.Options.Resource);
 
                         ctx.HandleCodeRedemption(result.AccessToken, result.IdToken);
                     }
                 };
-            });
-
-            services.AddAuthentication(auth =>
-            {
-                auth.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                auth.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
-                auth.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             });
         }
         

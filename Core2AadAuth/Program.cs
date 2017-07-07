@@ -1,7 +1,5 @@
-﻿using System.Collections.Generic;
-using Microsoft.AspNetCore;
+﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace Core2AadAuth
 {
@@ -14,14 +12,6 @@ namespace Core2AadAuth
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .ConfigureLogging(loggerFactory =>
-                {
-                    loggerFactory.AddConsole();
-                    loggerFactory.AddFilter(new Dictionary<string, LogLevel>
-                    {
-                        ["Microsoft"] = LogLevel.Debug
-                    });
-                })
                 .UseStartup<Startup>()
                 .Build();
     }

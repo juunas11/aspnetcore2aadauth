@@ -6,11 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="wwwroot\styles.css" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.0-preview2-25332" />
-    <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="3.13.8" />
+    <!-- CI build YOLO -->
+    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.0-rtm-26152" />
+    <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="3.14.1" />
   </ItemGroup>
 
 </Project>
