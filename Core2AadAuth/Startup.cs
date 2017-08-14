@@ -32,6 +32,10 @@ namespace Core2AadAuth
                 opts.Filters.Add(typeof(AdalTokenAcquisitionExceptionFilter));
             });
 
+            services.AddAuthorization(o =>
+            {
+            });
+
             services.AddAuthentication(auth =>
             {
                 auth.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -58,7 +62,7 @@ namespace Core2AadAuth
                         var cache = new AdalDistributedTokenCache(distributedCache, userId);
 
                         var authContext = new AuthenticationContext(ctx.Options.Authority, cache);
-
+                        
                         AuthenticationResult result = await authContext.AcquireTokenByAuthorizationCodeAsync(
                             ctx.ProtocolMessage.Code, new Uri(currentUri), credential, ctx.Options.Resource);
 

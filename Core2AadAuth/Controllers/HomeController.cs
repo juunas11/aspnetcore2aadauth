@@ -26,7 +26,10 @@ namespace Core2AadAuth.Controllers
         }
 
         [AllowAnonymous]
-        public IActionResult Index() => View();
+        public IActionResult Index()
+        {
+            return View();
+        }
 
         public IActionResult UserClaims() => View();
 
