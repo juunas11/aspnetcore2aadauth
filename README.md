@@ -11,5 +11,5 @@ You must also add permissions for the app to the Microsoft Graph API:
 1. Go to Required permissions
 1. Click Add
 1. Choose *Microsoft Graph* as the API
-1. Select *Sign in and read user profile* under *Delegated permissions*
+1. Select *Sign in and read user profile*, *View users' basic profile*, and *View users' email address* under *Delegated permissions*
 1. Click Select and Done
