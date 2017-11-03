@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Security.Claims;
-using System.Threading.Tasks;
 using Core2AadAuth.Filters;
 using Core2AadAuth.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -36,6 +34,8 @@ namespace Core2AadAuth
             {
             });
 
+            services.Configure<OpenIdConnectOptions>(Configuration.GetSection("Authentication"));
+
             services.AddAuthentication(auth =>
             {
                 auth.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -45,7 +45,7 @@ namespace Core2AadAuth
             .AddCookie()
             .AddOpenIdConnect(opts =>
             {
-                Configuration.GetSection("Authentication").Bind(opts);
+                //Configuration.GetSection("Authentication").Bind(opts);
 
                 opts.Events = new OpenIdConnectEvents
                 {
