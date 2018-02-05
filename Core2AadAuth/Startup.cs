@@ -34,8 +34,6 @@ namespace Core2AadAuth
             {
             });
 
-            services.Configure<OpenIdConnectOptions>(Configuration.GetSection("Authentication"));
-
             services.AddAuthentication(auth =>
             {
                 auth.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -45,7 +43,7 @@ namespace Core2AadAuth
             .AddCookie()
             .AddOpenIdConnect(opts =>
             {
-                //Configuration.GetSection("Authentication").Bind(opts);
+                Configuration.GetSection("Authentication").Bind(opts);
 
                 opts.Events = new OpenIdConnectEvents
                 {
@@ -56,13 +54,13 @@ namespace Core2AadAuth
                         var credential = new ClientCredential(ctx.Options.ClientId, ctx.Options.ClientSecret);
 
                         IDistributedCache distributedCache = ctx.HttpContext.RequestServices.GetRequiredService<IDistributedCache>();
-                        
+
                         string userId = ctx.Principal.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
 
                         var cache = new AdalDistributedTokenCache(distributedCache, userId);
 
                         var authContext = new AuthenticationContext(ctx.Options.Authority, cache);
-                        
+
                         AuthenticationResult result = await authContext.AcquireTokenByAuthorizationCodeAsync(
                             ctx.ProtocolMessage.Code, new Uri(currentUri), credential, ctx.Options.Resource);
 
@@ -71,7 +69,7 @@ namespace Core2AadAuth
                 };
             });
         }
-        
+
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             if (env.IsDevelopment())
