@@ -1,7 +1,15 @@
-﻿@{
+﻿@model HomeMsGraphModel
+@{
     ViewData["Title"] = "MS Graph test";
 }
 
-<h1>Response from Graph:</h1>
-<p style="word-break: break-all;">@ViewBag.GraphResponse</p>
-<img src="/Home/ProfilePhoto"/>
+<div class="row">
+    <div class="col-sm-8">
+        <h1>Response from Graph:</h1>
+        <pre><code>@Model.GraphResponse</code></pre>
+    </div>
+    <div class="col-sm-4">
+        <h1>User photo</h1>
+        <img src="/Home/ProfilePhoto"/>
+    </div>
+</div>

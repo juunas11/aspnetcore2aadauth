@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Security.Claims;
 using Core2AadAuth.Filters;
+using Core2AadAuth.Options;
 using Core2AadAuth.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
@@ -30,15 +33,19 @@ namespace Core2AadAuth
                 opts.Filters.Add(typeof(AdalTokenAcquisitionExceptionFilter));
             });
 
-            services.AddAuthorization(o =>
-            {
-            });
+            //TODO: Set up Data Protection key persistence correctly for your env: https://docs.microsoft.com/en-us/aspnet/core/security/data-protection/configuration/overview?tabs=aspnetcore2x
+            //I go with defaults, which works fine in my case
+            //But if you run on Azure App Service and use deployment slots, keys get swapped with the app
+            //So you'll need to setup storage for keys outside the app, Key Vault and Blob Storage are some options
+            services.AddDataProtection();
+
+            //Add a strongly-typed options class to DI
+            services.Configure<AuthOptions>(Configuration.GetSection("Authentication"));
 
             services.AddAuthentication(auth =>
             {
-                auth.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                auth.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 auth.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
-                auth.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             })
             .AddCookie()
             .AddOpenIdConnect(opts =>
@@ -50,20 +57,26 @@ namespace Core2AadAuth
                     OnAuthorizationCodeReceived = async ctx =>
                     {
                         HttpRequest request = ctx.HttpContext.Request;
+                        //We need to also specify the redirect URL used
                         string currentUri = UriHelper.BuildAbsolute(request.Scheme, request.Host, request.PathBase, request.Path);
+                        //Credentials for app itself
                         var credential = new ClientCredential(ctx.Options.ClientId, ctx.Options.ClientSecret);
 
+                        //Construct token cache
                         IDistributedCache distributedCache = ctx.HttpContext.RequestServices.GetRequiredService<IDistributedCache>();
-
-                        string userId = ctx.Principal.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
-
-                        var cache = new AdalDistributedTokenCache(distributedCache, userId);
+                        IDataProtectionProvider dataProtectionProvider = ctx.HttpContext.RequestServices.GetRequiredService<IDataProtectionProvider>();
+                        IDataProtector dataProtector = dataProtectionProvider.CreateProtector("AadTokens");
+                        string userId = ctx.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/objectidentifier");
+                        var cache = new AdalDistributedTokenCache(distributedCache, dataProtector, userId);
 
                         var authContext = new AuthenticationContext(ctx.Options.Authority, cache);
 
+                        //Get token for Microsoft Graph API using the authorization code
+                        string resource = "https://graph.microsoft.com";
                         AuthenticationResult result = await authContext.AcquireTokenByAuthorizationCodeAsync(
-                            ctx.ProtocolMessage.Code, new Uri(currentUri), credential, ctx.Options.Resource);
+                            ctx.ProtocolMessage.Code, new Uri(currentUri), credential, resource);
 
+                        //Tell the OIDC middleware we got the tokens, it doesn't need to do anything
                         ctx.HandleCodeRedemption(result.AccessToken, result.IdToken);
                     }
                 };

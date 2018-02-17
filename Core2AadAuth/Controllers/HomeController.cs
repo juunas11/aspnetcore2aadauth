@@ -2,13 +2,16 @@
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Core2AadAuth.Models;
+using Core2AadAuth.Options;
 using Core2AadAuth.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Newtonsoft.Json;
 
 namespace Core2AadAuth.Controllers
 {
@@ -17,31 +20,40 @@ namespace Core2AadAuth.Controllers
     {
         private static readonly HttpClient Client = new HttpClient();
         private readonly IDistributedCache _cache;
-        private readonly IConfiguration _config;
+        private readonly IDataProtector _dataProtector;
+        private readonly AuthOptions _authOptions;
 
-        public HomeController(IDistributedCache cache, IConfiguration config)
+        public HomeController(IDistributedCache cache, IDataProtectionProvider dataProtectionProvider, IOptions<AuthOptions> authOptions)
         {
             _cache = cache;
-            _config = config;
+            _dataProtector = dataProtectionProvider.CreateProtector("AadTokens");
+            _authOptions = authOptions.Value;
         }
 
+        [HttpGet]
         [AllowAnonymous]
-        public IActionResult Index()
-        {
-            return View();
-        }
+        public IActionResult Index() => View();
 
+        [HttpGet]
         public IActionResult UserClaims() => View();
 
+        [HttpGet]
         public async Task<IActionResult> MsGraph()
         {
             HttpResponseMessage res = await QueryGraphAsync("/me");
 
-            ViewBag.GraphResponse = await res.Content.ReadAsStringAsync();
-            
-            return View();
+            string rawResponse = await res.Content.ReadAsStringAsync();
+            string prettyResponse =
+                JsonConvert.SerializeObject(JsonConvert.DeserializeObject(rawResponse), Formatting.Indented);
+
+            var model = new HomeMsGraphModel
+            {
+                GraphResponse = prettyResponse
+            };
+            return View(model);
         }
 
+        [HttpGet]
         public async Task<IActionResult> ProfilePhoto()
         {
             HttpResponseMessage res = await QueryGraphAsync("/me/photo/$value");
@@ -49,10 +61,12 @@ namespace Core2AadAuth.Controllers
             return File(await res.Content.ReadAsStreamAsync(), "image/jpeg");
         }
 
+        //Normally this stuff would be in another service, not in the controller
+        //But for the sake of an example, it is a bit easier
         private async Task<HttpResponseMessage> QueryGraphAsync(string relativeUrl)
         {
             var req = new HttpRequestMessage(HttpMethod.Get, "https://graph.microsoft.com/beta" + relativeUrl);
-            
+
             string accessToken = await GetAccessTokenAsync();
             req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
@@ -61,18 +75,22 @@ namespace Core2AadAuth.Controllers
 
         private async Task<string> GetAccessTokenAsync()
         {
-            string authority = _config["Authentication:Authority"];
+            string authority = _authOptions.Authority;
 
-            string userId = User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
-            var cache = new AdalDistributedTokenCache(_cache, userId);
+            string userId = User.FindFirstValue("http://schemas.microsoft.com/identity/claims/objectidentifier");
+            var cache = new AdalDistributedTokenCache(_cache, _dataProtector, userId);
 
             var authContext = new AuthenticationContext(authority, cache);
 
-            string clientId = _config["Authentication:ClientId"];
-            string clientSecret = _config["Authentication:ClientSecret"];
+            //App's credentials may be needed if access tokens need to be refreshed with a refresh token
+            string clientId = _authOptions.ClientId;
+            string clientSecret = _authOptions.ClientSecret;
             var credential = new ClientCredential(clientId, clientSecret);
 
-            var result = await authContext.AcquireTokenSilentAsync("https://graph.microsoft.com", credential, new UserIdentifier(userId, UserIdentifierType.UniqueId));
+            var result = await authContext.AcquireTokenSilentAsync(
+                "https://graph.microsoft.com",
+                credential,
+                new UserIdentifier(userId, UserIdentifierType.UniqueId));
 
             return result.AccessToken;
         }

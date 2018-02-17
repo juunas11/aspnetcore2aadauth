@@ -4,6 +4,10 @@ using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 namespace Core2AadAuth.Filters
 {
+    /// <summary>
+    /// Triggers authentication if access token cannot be acquired
+    /// silently, i.e. from cache.
+    /// </summary>
     public class AdalTokenAcquisitionExceptionFilter : ExceptionFilterAttribute
     {
         public override void OnException(ExceptionContext context)
