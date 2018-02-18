@@ -89,6 +89,27 @@ namespace Core2AadAuth
             {
                 app.UseDeveloperExceptionPage();
             }
+            else if (env.IsProduction())
+            {
+                app.Use(async (ctx, next) =>
+                {
+                    if (!ctx.Request.IsHttps)
+                    {
+                        //Insecure request, redirect to HTTPS side
+                        HttpRequest req = ctx.Request;
+                        string url = "https://" + req.Host + req.Path + req.QueryString;
+                        ctx.Response.Redirect(url, permanent: true);
+                    }
+                    else
+                    {
+                        //Apply Strict Transport Security to all secure requests
+                        //All requests done over secure channel for next year
+                        ctx.Response.Headers["Strict-Transport-Security"] = "max-age=31536000";
+
+                        await next();
+                    }
+                });
+            }
 
             app.UseStaticFiles();
 
