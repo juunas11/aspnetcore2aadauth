@@ -20,13 +20,13 @@ namespace Core2AadAuth.Controllers
     {
         private static readonly HttpClient Client = new HttpClient();
         private readonly IDistributedCache _cache;
-        private readonly IDataProtector _dataProtector;
+        private readonly IDataProtectionProvider _dataProtectionProvider;
         private readonly AuthOptions _authOptions;
 
         public HomeController(IDistributedCache cache, IDataProtectionProvider dataProtectionProvider, IOptions<AuthOptions> authOptions)
         {
             _cache = cache;
-            _dataProtector = dataProtectionProvider.CreateProtector("AadTokens");
+            _dataProtectionProvider = dataProtectionProvider;
             _authOptions = authOptions.Value;
         }
 
@@ -78,7 +78,7 @@ namespace Core2AadAuth.Controllers
             string authority = _authOptions.Authority;
 
             string userId = User.FindFirstValue("http://schemas.microsoft.com/identity/claims/objectidentifier");
-            var cache = new AdalDistributedTokenCache(_cache, _dataProtector, userId);
+            var cache = new AdalDistributedTokenCache(_cache, _dataProtectionProvider, userId);
 
             var authContext = new AuthenticationContext(authority, cache);
 

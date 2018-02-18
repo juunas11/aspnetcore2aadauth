@@ -65,9 +65,8 @@ namespace Core2AadAuth
                         //Construct token cache
                         IDistributedCache distributedCache = ctx.HttpContext.RequestServices.GetRequiredService<IDistributedCache>();
                         IDataProtectionProvider dataProtectionProvider = ctx.HttpContext.RequestServices.GetRequiredService<IDataProtectionProvider>();
-                        IDataProtector dataProtector = dataProtectionProvider.CreateProtector("AadTokens");
                         string userId = ctx.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/objectidentifier");
-                        var cache = new AdalDistributedTokenCache(distributedCache, dataProtector, userId);
+                        var cache = new AdalDistributedTokenCache(distributedCache, dataProtectionProvider, userId);
 
                         var authContext = new AuthenticationContext(ctx.Options.Authority, cache);
 

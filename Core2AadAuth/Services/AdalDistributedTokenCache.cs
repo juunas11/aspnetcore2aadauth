@@ -18,12 +18,12 @@ namespace Core2AadAuth.Services
         /// Constructs a token cache
         /// </summary>
         /// <param name="cache">Distributed cache to use to store data</param>
-        /// <param name="dataProtector">The protector for encrypting/decrypting the cached data</param>
+        /// <param name="dataProtectionProvider">The protector provider for encrypting/decrypting the cached data</param>
         /// <param name="userId">The user's unique identifier</param>
-        public AdalDistributedTokenCache(IDistributedCache cache, IDataProtector dataProtector, string userId)
+        public AdalDistributedTokenCache(IDistributedCache cache, IDataProtectionProvider dataProtectionProvider, string userId)
         {
             _cache = cache;
-            _dataProtector = dataProtector;
+            _dataProtector = dataProtectionProvider.CreateProtector("AadTokens");
             _userId = userId;
             BeforeAccess = BeforeAccessNotification;
             AfterAccess = AfterAccessNotification;
