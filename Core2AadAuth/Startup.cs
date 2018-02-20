@@ -42,6 +42,8 @@ namespace Core2AadAuth
             //Add a strongly-typed options class to DI
             services.Configure<AuthOptions>(Configuration.GetSection("Authentication"));
 
+            services.AddSingleton<ITokenCacheFactory, TokenCacheFactory>();
+
             services.AddAuthentication(auth =>
             {
                 auth.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -63,10 +65,8 @@ namespace Core2AadAuth
                         var credential = new ClientCredential(ctx.Options.ClientId, ctx.Options.ClientSecret);
 
                         //Construct token cache
-                        IDistributedCache distributedCache = ctx.HttpContext.RequestServices.GetRequiredService<IDistributedCache>();
-                        IDataProtectionProvider dataProtectionProvider = ctx.HttpContext.RequestServices.GetRequiredService<IDataProtectionProvider>();
-                        string userId = ctx.Principal.FindFirstValue("http://schemas.microsoft.com/identity/claims/objectidentifier");
-                        var cache = new AdalDistributedTokenCache(distributedCache, dataProtectionProvider, userId);
+                        ITokenCacheFactory cacheFactory = ctx.HttpContext.RequestServices.GetRequiredService<ITokenCacheFactory>();
+                        TokenCache cache = cacheFactory.CreateForUser(ctx.Principal);
 
                         var authContext = new AuthenticationContext(ctx.Options.Authority, cache);
 
@@ -88,8 +88,9 @@ namespace Core2AadAuth
             {
                 app.UseDeveloperExceptionPage();
             }
-            else if (env.IsProduction())
+            else
             {
+                //Outside dev, require HTTPS and use HSTS
                 app.Use(async (ctx, next) =>
                 {
                     if (!ctx.Request.IsHttps)

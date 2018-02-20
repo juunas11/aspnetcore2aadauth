@@ -2,6 +2,7 @@
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Core2AadAuth.Extensions;
 using Core2AadAuth.Models;
 using Core2AadAuth.Options;
 using Core2AadAuth.Services;
@@ -19,14 +20,12 @@ namespace Core2AadAuth.Controllers
     public class HomeController : Controller
     {
         private static readonly HttpClient Client = new HttpClient();
-        private readonly IDistributedCache _cache;
-        private readonly IDataProtectionProvider _dataProtectionProvider;
+        private readonly ITokenCacheFactory _tokenCacheFactory;
         private readonly AuthOptions _authOptions;
 
-        public HomeController(IDistributedCache cache, IDataProtectionProvider dataProtectionProvider, IOptions<AuthOptions> authOptions)
+        public HomeController(ITokenCacheFactory tokenCacheFactory, IOptions<AuthOptions> authOptions)
         {
-            _cache = cache;
-            _dataProtectionProvider = dataProtectionProvider;
+            _tokenCacheFactory = tokenCacheFactory;
             _authOptions = authOptions.Value;
         }
 
@@ -77,8 +76,7 @@ namespace Core2AadAuth.Controllers
         {
             string authority = _authOptions.Authority;
 
-            string userId = User.FindFirstValue("http://schemas.microsoft.com/identity/claims/objectidentifier");
-            var cache = new AdalDistributedTokenCache(_cache, _dataProtectionProvider, userId);
+            var cache = _tokenCacheFactory.CreateForUser(User);
 
             var authContext = new AuthenticationContext(authority, cache);
 
@@ -86,6 +84,7 @@ namespace Core2AadAuth.Controllers
             string clientId = _authOptions.ClientId;
             string clientSecret = _authOptions.ClientSecret;
             var credential = new ClientCredential(clientId, clientSecret);
+            var userId = User.GetObjectId();
 
             var result = await authContext.AcquireTokenSilentAsync(
                 "https://graph.microsoft.com",
