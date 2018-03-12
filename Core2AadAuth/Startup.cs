@@ -14,6 +14,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Core2AadAuth
 {
@@ -78,6 +79,13 @@ namespace Core2AadAuth
                         //Tell the OIDC middleware we got the tokens, it doesn't need to do anything
                         ctx.HandleCodeRedemption(result.AccessToken, result.IdToken);
                     }
+                };
+                opts.TokenValidationParameters = new TokenValidationParameters
+                {
+                    //We can't validate the issuer in a multi-tenant app
+                    //We could check that the issuer claim starts with https://sts.windows.net/, but it's kind of unnecessary
+                    //Token signature is still checked against the AAD signing keys anyway
+                    ValidateIssuer = false
                 };
             });
         }
