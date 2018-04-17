@@ -2,6 +2,15 @@
 
 This sample application is built on ASP.NET Core 2.0 to test authentication via Azure AD.
 
+## Pre-requisites
+
+You will need a development environment capable of running an ASP.NET Core 2.0 application.
+
+Windows users can install [Visual Studio 2017](https://www.visualstudio.com/downloads/) with the **ASP.NET and web development workload**.
+
+Users on Windows, Mac, or Linux can download the [.NET Core SDK](https://www.microsoft.com/net/download) and use any editor that works best.
+[Visual Studio Code](https://code.visualstudio.com/) is pretty good.
+
 ## Setup instructions
 
 To run the app locally, you'll need to register an application in Azure AD.
