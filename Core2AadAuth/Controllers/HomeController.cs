@@ -1,15 +1,12 @@
 ﻿using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using Core2AadAuth.Extensions;
 using Core2AadAuth.Models;
 using Core2AadAuth.Options;
 using Core2AadAuth.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Newtonsoft.Json;
