@@ -42,7 +42,7 @@ namespace Core2AadAuth
             //Add a strongly-typed options class to DI
             services.Configure<AuthOptions>(Configuration.GetSection("Authentication"));
 
-            services.AddSingleton<ITokenCacheFactory, TokenCacheFactory>();
+            services.AddScoped<ITokenCacheFactory, TokenCacheFactory>();
 
             services.AddAuthentication(auth =>
             {
