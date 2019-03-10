@@ -1,16 +1,15 @@
 ﻿using System;
-using System.Security.Claims;
 using Core2AadAuth.Filters;
 using Core2AadAuth.Options;
 using Core2AadAuth.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
@@ -32,7 +31,7 @@ namespace Core2AadAuth
             services.AddMvc(opts =>
             {
                 opts.Filters.Add(typeof(AdalTokenAcquisitionExceptionFilter));
-            });
+            }).SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             //TODO: Set up Data Protection key persistence correctly for your env: https://docs.microsoft.com/en-us/aspnet/core/security/data-protection/configuration/overview?tabs=aspnetcore2x
             //I go with defaults, which works fine in my case
@@ -88,6 +87,13 @@ namespace Core2AadAuth
                     ValidateIssuer = false
                 };
             });
+
+            services.Configure<HstsOptions>(o =>
+            {
+                o.IncludeSubDomains = false;
+                o.Preload = false;
+                o.MaxAge = TimeSpan.FromDays(365);
+            });
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -99,24 +105,8 @@ namespace Core2AadAuth
             else
             {
                 //Outside dev, require HTTPS and use HSTS
-                app.Use(async (ctx, next) =>
-                {
-                    if (!ctx.Request.IsHttps)
-                    {
-                        //Insecure request, redirect to HTTPS side
-                        HttpRequest req = ctx.Request;
-                        string url = "https://" + req.Host + req.Path + req.QueryString;
-                        ctx.Response.Redirect(url, permanent: true);
-                    }
-                    else
-                    {
-                        //Apply Strict Transport Security to all secure requests
-                        //All requests done over secure channel for next year
-                        ctx.Response.Headers["Strict-Transport-Security"] = "max-age=31536000";
-
-                        await next();
-                    }
-                });
+                app.UseHttpsRedirection();
+                app.UseHsts();
             }
 
             app.UseStaticFiles();
