@@ -1,10 +1,10 @@
-# ASP.NET Core 2.0 Azure AD authentication example
+# ASP.NET Core 2.1 Azure AD authentication example
 
-This sample application is built on ASP.NET Core 2.0 to test authentication via Azure AD.
+This sample application is built on ASP.NET Core 2.1 to test authentication via Azure AD.
 
 ## Pre-requisites
 
-You will need a development environment capable of running an ASP.NET Core 2.0 application.
+You will need a development environment capable of running an ASP.NET Core 2.1 application.
 
 Windows users can install [Visual Studio 2017](https://www.visualstudio.com/downloads/) with the **ASP.NET and web development workload**.
 
