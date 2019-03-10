@@ -1,9 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26430.6
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28705.295
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core2AadAuth", "Core2AadAuth\Core2AadAuth.csproj", "{4F5E185E-C1BB-4659-8A05-C54D8C952BC1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core2AadAuth", "Core2AadAuth\Core2AadAuth.csproj", "{4F5E185E-C1BB-4659-8A05-C54D8C952BC1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{63A5926C-3F96-4362-A3B1-9EA17AA43B64}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +23,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3BB9C21E-5442-40EB-B908-FE5651D083FE}
 	EndGlobalSection
 EndGlobal
