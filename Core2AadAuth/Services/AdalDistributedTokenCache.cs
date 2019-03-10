@@ -1,7 +1,6 @@
 using System;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 namespace Core2AadAuth.Services
