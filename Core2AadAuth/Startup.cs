@@ -81,10 +81,8 @@ namespace Core2AadAuth
                 };
                 opts.TokenValidationParameters = new TokenValidationParameters
                 {
-                    //We can't validate the issuer in a multi-tenant app
-                    //We could check that the issuer claim starts with https://sts.windows.net/, but it's kind of unnecessary
-                    //Token signature is still checked against the AAD signing keys anyway
-                    ValidateIssuer = false
+                    // Checks tokens are issued from an issuer starting with https://sts.windows.net/
+                    IssuerValidator = ValidateTokenIssuerPrefix
                 };
             });
 
@@ -94,6 +92,24 @@ namespace Core2AadAuth
                 o.Preload = false;
                 o.MaxAge = TimeSpan.FromDays(365);
             });
+        }
+
+        private string ValidateTokenIssuerPrefix(
+            string issuer, SecurityToken securityToken, TokenValidationParameters validationParameters)
+        {
+            // Does the same as what the framework issuer validator does
+            // Ref: https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/blob/b152f463d910230859ec67705f11e51af4db4217/src/Microsoft.IdentityModel.Tokens/Validators.cs#L125
+            // Return issuer if it is valid
+            if (issuer.StartsWith("https://sts.windows.net/", StringComparison.Ordinal))
+            {
+                return issuer;
+            }
+
+            // Otherwise throw an exception
+            throw new SecurityTokenInvalidIssuerException("Invalid issuer in token")
+            {
+                InvalidIssuer = issuer
+            };
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
