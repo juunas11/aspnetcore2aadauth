@@ -2,6 +2,9 @@
 
 This sample application is built on ASP.NET Core 2.1 to test authentication via Azure AD.
 
+Note this is the multi-tenant version of the sample
+that allows authentication from any Azure AD tenant.
+
 ## Pre-requisites
 
 You will need a development environment capable of running an ASP.NET Core 2.1 application.
@@ -36,6 +39,14 @@ Getting client id, setting reply URL, and generating client secret:
 1. In the *Passwords* section, put some description for the key, select the expiry, and hit **Save**
 1. Copy the key value somewhere, this is your client secret (keep it secret)
 
+Setting the app multi-tenanted:
+
+1. While you still have the app registration open, open **Settings -> Properties**
+1. Scroll down and set **Multi-tenanted** to **Yes**
+1. Click **Save**
+
+The app now allows authentication from any Azure AD tenant.
+
 Adding permissions for Microsoft Graph API:
 
 1. Find your app in the Azure AD blade's App Registrations tab in Azure Portal
@@ -47,10 +58,8 @@ Adding permissions for Microsoft Graph API:
 
 Getting the authority URL:
 
-1. Go back to the App registrations list
-1. Click **Endpoints**
-1. Copy the **OAuth 2.0 Authorization Endpoint** value
-1. Remove the */oauth2/authorize* part from the URL, the result is your *Authority*
+Since the app is multi-tenanted,
+your authority URL is *https://login.microsoftonline.com/common/*.
 
 Fill the values in settings:
 
